@@ -68,6 +68,7 @@ const COMMON_HEADERS = [
 ];
 
 const currentDomainEl = document.getElementById('current-domain');
+const versionEl = document.getElementById('version');
 const groupsList = document.getElementById('groups-list');
 const groupFilter = document.getElementById('group-filter');
 const currentOnlyToggle = document.getElementById('current-only-toggle');
@@ -84,6 +85,10 @@ const importBtn = document.getElementById('import-rules');
 const importFile = document.getElementById('import-file');
 
 async function init() {
+  const manifest = chrome.runtime.getManifest();
+  if (versionEl && manifest?.version) {
+    versionEl.textContent = `v${manifest.version}`;
+  }
   createHeaderDatalist();
   updateQuickValueVisibility();
   await loadEnabled();
