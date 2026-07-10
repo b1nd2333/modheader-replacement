@@ -302,6 +302,9 @@ function renderGroups() {
           </div>
         </div>
         <div class="group-actions">
+          <label class="inline toggle-enable" title="${group.enabled ? '停用分组' : '启用分组'}">
+            <input type="checkbox" class="toggle-group-enabled" data-group-id="${group.id}" ${group.enabled ? 'checked' : ''} />
+          </label>
           <button type="button" class="toggle-group small" data-group-id="${group.id}">
             ${isEditingGroup ? '关闭' : '编辑'}
           </button>
@@ -423,6 +426,9 @@ function renderHeaderRow(group, h) {
         ${h.operation === 'remove' ? '' : '= ' + escapeHtml(h.value || '')}
       </div>
       <div class="header-actions">
+        <label class="inline toggle-enable" title="${h.enabled ? '停用' : '启用'}">
+          <input type="checkbox" class="toggle-header-enabled" data-group-id="${group.id}" data-header-id="${h.id}" ${h.enabled ? 'checked' : ''} />
+        </label>
         <button type="button" class="edit-header small" data-group-id="${group.id}" data-header-id="${h.id}">编辑</button>
         <button type="button" class="danger delete-header small" data-group-id="${group.id}" data-header-id="${h.id}">×</button>
       </div>
@@ -670,6 +676,28 @@ groupsList.addEventListener('click', (e) => {
 
 groupsList.addEventListener('change', (e) => {
   const target = e.target;
+
+  if (target.classList.contains('toggle-group-enabled')) {
+    const group = getGroupById(target.dataset.groupId);
+    if (group) {
+      group.enabled = target.checked;
+      saveGroups().then(renderGroups);
+    }
+    return;
+  }
+
+  if (target.classList.contains('toggle-header-enabled')) {
+    const group = getGroupById(target.dataset.groupId);
+    if (group) {
+      const header = group.headers.find((h) => h.id === target.dataset.headerId);
+      if (header) {
+        header.enabled = target.checked;
+        saveGroups().then(renderGroups);
+      }
+    }
+    return;
+  }
+
   if (target.classList.contains('header-operation')) {
     const form = target.closest('.header-form');
     if (form) updateHeaderValueVisibility(form);
