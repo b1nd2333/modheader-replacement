@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Header Mod</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Header Mod</h1>
+      <div class="header-status">
+        <label class="switch" title="启用所有规则">
+          <input type="checkbox" id="global-toggle" checked />
+          <span class="slider"></span>
+        </label>
+        <span id="rules-count" class="rules-count">0 条生效</span>
+      </div>
+    </header>
+
+    <!-- 快速添加 -->
+    <section class="card quick-add">
+      <div class="card-title">
+        为 <strong id="current-domain">...</strong> 快速添加
+      </div>
+      <form id="quick-form">
+        <input type="text" id="quick-name" list="header-names" placeholder="Header 名称，例如 Authorization" required />
+        <div id="quick-value-wrap">
+          <input type="text" id="quick-value" placeholder="Header 值，例如 Bearer xxx" />
+        </div>
+
+        <div class="row">
+          <select id="quick-type">
+            <option value="request">请求头</option>
+            <option value="response">响应头</option>
+          </select>
+          <select id="quick-operation">
+            <option value="set">设置</option>
+            <option value="append">追加</option>
+            <option value="remove">删除</option>
+          </select>
+        </div>
+
+        <div class="scope">
+          <label class="inline">
+            <input type="radio" name="scope" value="current" checked />
+            当前域名
+          </label>
+          <label class="inline">
+            <input type="radio" name="scope" value="subdomains" />
+            含子域名
+          </label>
+          <label class="inline">
+            <input type="radio" name="scope" value="all" />
+            所有域名
+          </label>
+        </div>
+
+        <button type="submit" class="primary full">添加 Header</button>
+      </form>
+    </section>
+
+    <!-- 当前生效 -->
+    <section class="card active-rules">
+      <div class="card-title">当前页面生效的规则</div>
+      <div id="active-headers-list"></div>
+    </section>
+
+    <!-- 域名组 -->
+    <section class="groups-section">
+      <div class="section-header">
+        <h2>域名分组</h2>
+        <button id="add-global" class="small" type="button">+ 全局</button>
+      </div>
+      <label class="inline filter-scope">
+        <input type="checkbox" id="current-only-toggle" checked />
+        仅显示当前域名相关
+      </label>
+      <input type="text" id="group-filter" class="filter-input" placeholder="筛选域名、Header 名称或值..." />
+      <div id="groups-list"></div>
+    </section>
+
+    <footer>
+      <button id="export-rules" type="button">导出</button>
+      <button id="import-rules" type="button">导入</button>
+      <input type="file" id="import-file" accept=".json" class="hidden" />
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
