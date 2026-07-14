@@ -345,43 +345,64 @@ function renderGroups() {
   renderActiveHeaders();
 }
 
-function renderActiveHeaders() {
-  if (!activeHeadersList) return;
-  activeHeadersList.innerHTML = '';
+function getEffectiveHeaders() {
+  if (!globalToggle.checked) return [];
 
-  if (!globalToggle.checked) {
-    activeHeadersList.innerHTML =
-      '<div class="empty small">扩展已暂停，当前没有规则生效</div>';
-    return;
-  }
-
-  const active = [];
+  const candidates = [];
   for (const group of groups) {
     if (!group.enabled) continue;
     const isGlobal = group.urlPattern === '*://*/*';
     const matchesCurrent = matchesDomain(group.urlPattern, currentDomain);
     if (!isGlobal && !matchesCurrent) continue;
 
+    const priority = getHeaderRulePriority(group);
     for (const header of group.headers) {
       if (!header.enabled) continue;
-      active.push({ group, header, isGlobal });
+      candidates.push({ group, header, priority, isGlobal });
     }
   }
 
-  if (active.length === 0) {
+  // 优先级高的排在前面
+  candidates.sort((a, b) => b.priority - a.priority);
+
+  // 同名同类型的 Header 只保留优先级最高的一个
+  const seen = new Set();
+  const effective = [];
+  for (const item of candidates) {
+    const key = `${item.header.type}:${item.header.name.toLowerCase()}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    effective.push(item);
+  }
+
+  return effective;
+}
+
+function getHeaderRulePriority(group) {
+  let base = 100;
+  if (group.urlPattern === '*://*/*') {
+    base = 100;
+  } else if (/:\/\/\*\./.test(group.urlPattern)) {
+    base = 200;
+  } else {
+    base = 300;
+  }
+  return base + (Number(group.priority) || 1) - 1;
+}
+
+function renderActiveHeaders() {
+  if (!activeHeadersList) return;
+  activeHeadersList.innerHTML = '';
+
+  const effective = getEffectiveHeaders();
+
+  if (effective.length === 0) {
     activeHeadersList.innerHTML =
       '<div class="empty small">当前页面没有生效的 Header</div>';
     return;
   }
 
-  // 当前域名优先，然后全局
-  active.sort((a, b) => {
-    if (a.isGlobal && !b.isGlobal) return 1;
-    if (!a.isGlobal && b.isGlobal) return -1;
-    return (a.group.name || '').localeCompare(b.group.name || '');
-  });
-
-  for (const { group, header, isGlobal } of active) {
+  for (const { group, header, isGlobal } of effective) {
     const el = document.createElement('div');
     el.className = `active-header-row${header.enabled ? '' : ' disabled'}`;
     el.innerHTML = `
