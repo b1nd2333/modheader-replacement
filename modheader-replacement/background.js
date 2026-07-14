@@ -53,7 +53,10 @@ async function refreshRules() {
 
         addRules.push({
           id: id++,
-          priority: Number(group.priority) || 1,
+          priority:
+            getPatternPriorityBase(group.urlPattern) +
+            (Number(group.priority) || 1) -
+            1,
           action,
           condition: {
             urlFilter: group.urlPattern,
@@ -106,6 +109,12 @@ function buildHeaderOperation(header) {
   return op;
 }
 
+function getPatternPriorityBase(pattern) {
+  if (!pattern) return 100;
+  if (pattern === '*://*/*') return 100; // 全局最低
+  if (/:\/\/\*\./.test(pattern)) return 200; // 子域名中间
+  return 300; // 精确域名最高
+}
 
 // Animated orca toolbar icon
 const FRAME_COUNT = 8;
