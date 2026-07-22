@@ -51,32 +51,51 @@ async function refreshRules() {
         if (requestHeaders.length > 0) action.requestHeaders = requestHeaders;
         if (responseHeaders.length > 0) action.responseHeaders = responseHeaders;
 
+        const priority =
+          getPatternPriorityBase(group.urlPattern) +
+          (Number(group.priority) || 1) -
+          1;
+
+        const resourceTypes = [
+          'main_frame',
+          'sub_frame',
+          'stylesheet',
+          'script',
+          'image',
+          'font',
+          'object',
+          'xmlhttprequest',
+          'ping',
+          'csp_report',
+          'media',
+          'websocket',
+          'other',
+        ];
+
         addRules.push({
           id: id++,
-          priority:
-            getPatternPriorityBase(group.urlPattern) +
-            (Number(group.priority) || 1) -
-            1,
+          priority,
           action,
           condition: {
             urlFilter: group.urlPattern,
-            resourceTypes: [
-              'main_frame',
-              'sub_frame',
-              'stylesheet',
-              'script',
-              'image',
-              'font',
-              'object',
-              'xmlhttprequest',
-              'ping',
-              'csp_report',
-              'media',
-              'websocket',
-              'other',
-            ],
+            resourceTypes,
           },
         });
+
+        // Chrome 匹配模式中 *.example.com 同时包含主域名本身，
+        // 但 declarativeNetRequest 的 urlFilter 不会自动包含，
+        // 需要为主域名额外补一条规则。
+        if (group.urlPattern.includes('://*.')) {
+          addRules.push({
+            id: id++,
+            priority,
+            action,
+            condition: {
+              urlFilter: group.urlPattern.replace('://*.', '://'),
+              resourceTypes,
+            },
+          });
+        }
       }
     }
 

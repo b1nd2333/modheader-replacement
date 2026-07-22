@@ -432,10 +432,20 @@ function matchesDomain(pattern, domain) {
 }
 
 function patternToRegex(pattern) {
-  const escaped = pattern
+  // Chrome 匹配模式中 *.example.com 同时匹配主域名与子域名，
+  // 与 background 的规则生成保持一致：把 ://*. 转成可选的子域名前缀。
+  const TOKEN = '\0';
+  const hasWildcardSubdomain = pattern.includes('://*.');
+  const normalized = hasWildcardSubdomain
+    ? pattern.replace('://*.', `://${TOKEN}`)
+    : pattern;
+  let re = normalized
     .replace(/[.+^${}()|[\]\\]/g, '\\$&')
     .replace(/\*/g, '.*');
-  return new RegExp('^' + escaped + '$');
+  if (hasWildcardSubdomain) {
+    re = re.replace(TOKEN, '(.*\\.)?');
+  }
+  return new RegExp('^' + re + '$');
 }
 
 function renderHeaderRow(group, h) {
